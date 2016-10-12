@@ -1,9 +1,14 @@
 #!/usr/bin/env pytho
 #-*-coding: utf-8 -*-
+#
+# This is the demo code by Kevin Lee
+#
+#
 
 import picamera
 import time
 import itertools
+import printer 
 
 import RPi.GPIO 
 import threading
@@ -22,10 +27,13 @@ class Button():
         # 当GND没有被接通时，GPIO口处于高电平状态，取的的值为1
         # 注意到这是一个可选项，如果不在程序里面设置，通常的做法是通过一个上拉电阻连接到VCC上使之默认保持高电平
         RPi.GPIO.setup(self.button, RPi.GPIO.IN, pull_up_down=RPi.GPIO.PUD_UP)
+        
     def attach(self,call_backFun):
         RPi.GPIO.add_event_detect(self.button, RPi.GPIO.RISING, callback=call_backFun, bouncetime=200)
+        
     def detach(self):
         RPi.GPIO.remove_event_detect(self.button)
+        
     def terminate(self):
         RPi.GPIO.cleanup()
         
@@ -45,8 +53,12 @@ class TakePhoto():
         self.camera.start_preview()
         self.camera.annotate_text = ' ' * 25
         self.camera.annotate_text_size = 28
-                
-        self._running = True;
+
+        
+        # init the photo printer
+        self.myprint = printer.Printer()
+        
+        self._running = True
     def runloop(self):
         global TAKEPHOTO
         while self._running:
@@ -72,10 +84,22 @@ class TakePhoto():
             self.camera.capture(self.filename)
         except Exception,e:
             logging.info(e)
+            
     def print_photo(self):
         self.camera.annotate_text = "Printing..."
         print("print the photo")
-        time.sleep(5)
+        
+        if True == self.myprint.printFile(self.filename):
+            logging.info("print the photo")
+            time.sleep(7)
+            
+        else:
+            time.sleep(3)
+            self.camera.annotate_text_size = 100
+            self.camera.annotate_text = "Printer Error"
+            time.sleep(7)
+            logging.info("Printer Error")
+            
         self.camera.annotate_text_size = 28
         self.camera.annotate_text = ' ' * 25
         
@@ -88,6 +112,4 @@ if __name__ == "__main__":
     btn.attach(takephoto)
 
     app = TakePhoto()
-    app.runloop()
-    
-
+    app.runloop()    
