@@ -58,6 +58,10 @@ class TakePhoto():
         # init the photo printer
         self.myprint = printer.Printer()
         
+        # Define the pin that control if to print the photo
+        self.mypin   = 3
+        RPi.GPIO.setup(self.mypin, RPi.GPIO.IN, pull_up_down=RPi.GPIO.PUD_DOWN)
+        
         self._running = True
     def runloop(self):
         global TAKEPHOTO
@@ -75,29 +79,30 @@ class TakePhoto():
         count_down = '54321'
         self.camera.annotate_text_size = 160
         for c in count_down:
-            self.camera.annotate_text = c
+            self.camera.annotate_text = "\n"+c
             time.sleep(1)
         self.camera.annotate_text = ''
         datetime.now()
-        self.filename = datetime.now().strftime("%d-%H-%M-%S")+'.jpg'
+        self.filename = datetime.now().strftime("20%y-%m-%d-%H-%M-%S")+'.jpg'
         try:
             self.camera.capture(self.filename)
         except Exception,e:
             logging.info(e)
             
     def print_photo(self):
-        self.camera.annotate_text = "Printing..."
+        self.camera.annotate_text = "\nPrinting..."
         print("print the photo")
         
-        if True == self.myprint.printFile(self.filename):
-            logging.info("print the photo")
-            time.sleep(7)
-            
+        # If the mypin 3 is low the printer will not print the photo
+        if RPi.GPIO.input(self.mypin):
+            if True == self.myprint.printFile(self.filename):
+                logging.info("print the photo")
+                time.sleep(10)
         else:
             time.sleep(3)
-            self.camera.annotate_text_size = 100
-            self.camera.annotate_text = "Printer Error"
-            time.sleep(7)
+            self.camera.annotate_text_size = 80
+            self.camera.annotate_text = "\n\n\n Printer Error \n Please try again later"
+            time.sleep(9)
             logging.info("Printer Error")
             
         self.camera.annotate_text_size = 28
