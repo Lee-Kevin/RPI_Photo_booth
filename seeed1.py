@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import time
 from PySide import QtCore, QtGui
 import random
+from joystick import Communicate,JoyStick
 
 Custom_Dict = {
 	2:   "Idea",
@@ -170,7 +172,10 @@ class Game2048(QtGui.QWidget):
         self.hiScore = max(self.score, self.hiScore)
         self.update()
         if not self.movesAvailable():
-            QtGui.QMessageBox.information(self, '', 'Game Over')
+            # QtGui.QMessageBox.information(self, '', 'Game Over')
+            # time.sleep(5)
+            # QtGui.QMessageBox.close()
+            
             self.gameRunning = False
 
     def movesAvailable(self):
@@ -196,30 +201,53 @@ class Game2048(QtGui.QWidget):
         elif e.key() == QtCore.Qt.Key_Left:
             self.left()
         elif e.key() == QtCore.Qt.Key_Right:
+            self.right()   
+            
+    def DirectionEvent(self, value):
+        class event:
+            def __init__(self):
+                pass
+            def key(self):
+                return QtCore.Qt.Key_Escape
+        e = event()    
+        
+        if not self.gameRunning:
+            return
+        if value == "click":
+            self.keyPressEvent(e)
+            self.reset_game()
+        elif value == "up":
+            self.up()
+        elif value == "down":
+            self.down()
+        elif value == "left":
+            self.left()
+        elif value == "right":
             self.right()
+            
 
-    def mousePressEvent(self, e):
-        self.lastPoint = e.pos()
+    # def mousePressEvent(self, e):
+        # self.lastPoint = e.pos()
 
-    def mouseReleaseEvent(self, e):
-        if self.resetRect.contains(self.lastPoint.x(), self.lastPoint.y()) and self.resetRect.contains(e.pos().x(),
-                                                                                                       e.pos().y()):
-            if QtGui.QMessageBox.question(self, '', 'Are you sure you want to start a new game?', QtGui.QMessageBox.Yes,
-                                          QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes:
-                self.reset_game()
-        elif self.gameRunning and self.lastPoint is not None:
-            dx = e.pos().x() - self.lastPoint.x()
-            dy = e.pos().y() - self.lastPoint.y()
-            if abs(dx) > abs(dy) and abs(dx) > 10:
-                if dx > 0:
-                    self.right()
-                else:
-                    self.left()
-            elif abs(dy) > 10:
-                if dy > 0:
-                    self.down()
-                else:
-                    self.up()
+    # def mouseReleaseEvent(self, e):
+        # if self.resetRect.contains(self.lastPoint.x(), self.lastPoint.y()) and self.resetRect.contains(e.pos().x(),
+                                                                                                       # e.pos().y()):
+            # if QtGui.QMessageBox.question(self, '', 'Are you sure you want to start a new game?', QtGui.QMessageBox.Yes,
+                                          # QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes:
+                # self.reset_game()
+        # elif self.gameRunning and self.lastPoint is not None:
+            # dx = e.pos().x() - self.lastPoint.x()
+            # dy = e.pos().y() - self.lastPoint.y()
+            # if abs(dx) > abs(dy) and abs(dx) > 10:
+                # if dx > 0:
+                    # self.right()
+                # else:
+                    # self.left()
+            # elif abs(dy) > 10:
+                # if dy > 0:
+                    # self.down()
+                # else:
+                    # self.up()
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -239,7 +267,7 @@ class Game2048(QtGui.QWidget):
         painter.setFont(QtGui.QFont('Arial', 15))
         painter.setPen(self.lightPen)
         painter.drawText(self.resetRect, 'RESET', QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-        painter.setFont(QtGui.QFont('Arial', 8))
+        painter.setFont(QtGui.QFont('Arial', 12))
         painter.setPen(self.lightPen)
         painter.drawText(self.scoreLabel, str(self.score),
                          QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
@@ -283,5 +311,15 @@ if __name__ == '__main__':
     # g.resize(500,400)
     g.changeGridSize(4)
     g.setWindowTitle(u'创客养成记')
+    
+    # configure the joystick
+    signal = Communicate()
+    signal.direction[str].connect(g.DirectionEvent)
+    joystickapp = JoyStick(signal)
+    joystickapp.runloop(.01)
+    
+    
+    
     g.show()
     app.exec_()
+

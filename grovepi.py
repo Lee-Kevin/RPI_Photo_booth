@@ -216,10 +216,10 @@ def pinMode(pin, mode):
 # Read analog value from Pin
 def analogRead(pin):
 	bus.write_i2c_block_data(address, 1, aRead_cmd + [pin, unused, unused])
-	time.sleep(.1)
+	time.sleep(.01)
 	bus.read_byte(address)
 	number = bus.read_i2c_block_data(address, 1)
-	time.sleep(.1)
+	time.sleep(.01)
 	return number[1] * 256 + number[2]
 
 
