@@ -4,7 +4,9 @@ import time
 from PySide import QtCore, QtGui
 import random
 from joystick import Communicate,JoyStick
+from TakePhoto import photo
 
+# Custom Dictionary according to detail situation
 Custom_Dict = {
 	2:   "Idea",
 	4:   "Design ",
@@ -21,7 +23,6 @@ Custom_Dict = {
 
 class Tile:
     def __init__(self, value):
-        value_dict = Custom_Dict
         self.value = value
 
 
@@ -66,6 +67,9 @@ class Game2048(QtGui.QWidget):
         self.setGeometry(0, 0, self.screen.width(), self.screen.height())
         self.reset_game()
         self.width = width
+        
+        self.SuccessCallBack = None
+        self.SuccessCallBackFlag = False
 
     def resizeEvent(self, e):
         width = min(e.size().width(), e.size().height() - self.panelHeight)
@@ -78,6 +82,9 @@ class Game2048(QtGui.QWidget):
         self.reset_game()
 
     def reset_game(self):
+        # The Falg of the success call back fun, if the function run once, don't run again
+        # False stands for no run  True stands for run once 
+        self.SuccessCallBackFlag = False
         # 矩阵瓦块
         self.tiles = [[None for i in range(0, self.gridSize)] for i in range(0, self.gridSize)]
         self.availableSpots = range(0, self.gridSize * self.gridSize)
@@ -228,6 +235,8 @@ class Game2048(QtGui.QWidget):
             self.left()
         elif value == "right":
             self.right()
+    def SetSuccessCallBack(self,callFun):
+        self.SuccessCallBack = callFun
             
 
     # def mousePressEvent(self, e):
@@ -306,18 +315,24 @@ class Game2048(QtGui.QWidget):
 
                     painter.drawText(rect, str(Custom_Dict[tile.value]),
                                      QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
+                                     
+                    # When someone is finished the game, call back the following function
+                    if tile.value == 8 and self.SuccessCallBack != None and self.SuccessCallBackFlag == False:
+                        self.SuccessCallBack()
+                        self.SuccessCallBackFlag = True
         if not self.gameRunning:
             painter.setPen(QtGui.QColor(255,0,0))
             painter.setFont(QtGui.QFont('Arial',self.width/4))
             painter.drawText(event.rect(),QtCore.Qt.AlignCenter,u'GAME\nOVER')
 
-
+def callback():
+    print("I have finished the game")
 if __name__ == '__main__':
     app = QtGui.QApplication([])
     g = Game2048(None, 600, 4)
     g.move(0, 0)
 
-    g.changeGridSize(4)
+    g.changeGridSize(3)
     g.setWindowTitle(u'创客养成记')
     
     # configure the joystick
@@ -326,7 +341,10 @@ if __name__ == '__main__':
     joystickapp = JoyStick(signal)
     joystickapp.runloop(.01)
     
-    # configure the 
+    # configure the photo printer
+    ph = photo.TakePhoto()
+    g.SetSuccessCallBack(ph.take_photo)
+    
     
     g.show()
     app.exec_()

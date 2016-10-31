@@ -1,4 +1,4 @@
-#!/usr/bin/env pytho
+#!/usr/bin/env python
 #-*-coding: utf-8 -*-
 #
 # This is the demo code by Kevin Lee
@@ -10,72 +10,22 @@ import time
 import itertools
 import printer 
 
-import RPi.GPIO 
 import threading
 import logging
 from datetime import datetime
 
 logging.basicConfig(level='INFO')
 TAKEPHOTO = False
-mybutton = 2
 
-class Button():
-    def __init__(self,button = 2):
-        self.button = button
-        RPi.GPIO.setmode(RPi.GPIO.BCM)
-        # 按钮连接的GPIO针脚的模式设置为信号输入模式，同时默认拉高GPIO口电平，
-        # 当GND没有被接通时，GPIO口处于高电平状态，取的的值为1
-        # 注意到这是一个可选项，如果不在程序里面设置，通常的做法是通过一个上拉电阻连接到VCC上使之默认保持高电平
-        RPi.GPIO.setup(self.button, RPi.GPIO.IN, pull_up_down=RPi.GPIO.PUD_UP)
-        
-    def attach(self,call_backFun):
-        RPi.GPIO.add_event_detect(self.button, RPi.GPIO.RISING, callback=call_backFun, bouncetime=200)
-        
-    def detach(self):
-        RPi.GPIO.remove_event_detect(self.button)
-        
-    def terminate(self):
-        RPi.GPIO.cleanup()
-        
-def takephoto(mybutton):
-    global TAKEPHOTO
-    TAKEPHOTO = True
-    print("button pressed")
-
- 
 class TakePhoto():
     def __init__(self):
-        self.s = " Say 'ReSpeaker' to take a photo "
         self.camera = picamera.PiCamera()
         self.camera.resolution = (1366, 768)
-        self.camera.framerate = 24
-        
-        self.camera.start_preview()
-        self.camera.annotate_text = ' ' * 25
-        self.camera.annotate_text_size = 28
-
-        
-        # init the photo printer
+        self.camera.framerate = 24       
         self.myprint = printer.Printer()
         
-        # Define the pin that control if to print the photo
-        self.mypin   = 3
-        RPi.GPIO.setup(self.mypin, RPi.GPIO.IN, pull_up_down=RPi.GPIO.PUD_DOWN)
-        
-        self._running = True
-    def runloop(self):
-        global TAKEPHOTO
-        while self._running:
-            for c in itertools.cycle(self.s):
-                self.camera.annotate_text = self.camera.annotate_text[1:25] + c
-                time.sleep(0.1)
-                if TAKEPHOTO:
-                    self.take_photo()
-                    self.print_photo()
-                    
-                    TAKEPHOTO = False
-            
     def take_photo(self):
+        self.camera.start_preview()
         count_down = '54321'
         self.camera.annotate_text_size = 160
         for c in count_down:
@@ -89,32 +39,19 @@ class TakePhoto():
         except Exception,e:
             logging.info(e)
             
+        self.print_photo()
+        self.camera.stop_preview()
+        return self.filename
+            
     def print_photo(self):
         self.camera.annotate_text = "\nPrinting..."
         print("print the photo")
         
         # If the mypin 3 is low the printer will not print the photo
-        if RPi.GPIO.input(self.mypin):
-            if True == self.myprint.printFile(self.filename):
-                logging.info("print the photo")
-                time.sleep(10)
-        else:
-            time.sleep(3)
-            self.camera.annotate_text_size = 80
-            self.camera.annotate_text = "\n\n\n Printer Error \n Please try again later"
-            time.sleep(9)
-            logging.info("Printer Error")
-            
-        self.camera.annotate_text_size = 28
-        self.camera.annotate_text = ' ' * 25
-        
-    def terminate(self):
-        self._running = False
-        self.camera.stop_preview()
-    
+        if True == self.myprint.printFile(self.filename):
+            logging.info("print the photo")
+            time.sleep(8)
 if __name__ == "__main__":
-    btn = Button(mybutton)
-    btn.attach(takephoto)
-
     app = TakePhoto()
-    app.runloop()    
+    filename = app.take_photo()
+    print(filename)
