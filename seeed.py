@@ -5,6 +5,7 @@ from PySide import QtCore, QtGui
 import random
 from joystick import Communicate,JoyStick
 from TakePhoto import photo
+import json
 
 # Custom Dictionary according to detail situation
 Custom_Dict = {
@@ -24,23 +25,6 @@ Custom_Dict = {
 class Tile:
     def __init__(self, value):
         self.value = value
-class RankPhoto(QtGui.QWidget):
-    def __init__(self,width):
-        super(RankPhoto,self).__init__()
-        self.width = width+25
-        self.Rect = None
-    def drawRankText(qp):
-        self.margin = 125
-        qp.setPen(QtGui.QColor(255,0,0))
-        qp.setFont(QtGui.QFont('Arial',self.width/20))
-        for i in range(0,10):
-            if i % 2 == 0:
-                Rect[i] = QtCore.QRect(self.width,100+(i/2)*self.margin,20, 20)
-            else:
-                Rect[i] = QtCore.QRect(self.width+300,100+(i/2)*self.margin,20,20)
-            qp.drawText(self.Rect[i],str(i),QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-
-            
          
 class Game2048(QtGui.QWidget):
     def __init__(self, parent, width=340, gridSize=2):
@@ -50,7 +34,11 @@ class Game2048(QtGui.QWidget):
         
         self.width = width
         self.screen = QtGui.QDesktopWidget().screenGeometry()
-        self.initRank()
+        f = open('rank.json','rb')
+        data_json = f.read()
+        f.close()
+        data = json.loads(data_json)
+        self.initRank(data)
         
         self.backgroundBrush = QtGui.QBrush(QtGui.QColor(0xbbada0))
         self.gridSize = gridSize
@@ -74,11 +62,7 @@ class Game2048(QtGui.QWidget):
         }
         self.lightPen = QtGui.QPen(QtGui.QColor(0xf9f6f2))
         self.darkPen = QtGui.QPen(QtGui.QColor(0x776e65))
-        # self.scoreRect = QtCore.QRect(10, 10, 80, self.panelHeight - 20)
-        # self.hiScoreRect = QtCore.QRect(100, 10, 80, self.panelHeight - 20)
-        # self.resetRect = QtCore.QRectF(190, 10, 80, self.panelHeight - 20)
-        # self.scoreLabel = QtCore.QRectF(10, 25, 80, self.panelHeight - 30)
-        # self.hiScoreLabel = QtCore.QRectF(100, 25, 80, self.panelHeight - 30)
+
         self.hiScore = 0
         self.lastPoint = None
         
@@ -261,30 +245,7 @@ class Game2048(QtGui.QWidget):
             self.right()
     def SetSuccessCallBack(self,callFun):
         self.SuccessCallBack = callFun
-            
 
-    # def mousePressEvent(self, e):
-        # self.lastPoint = e.pos()
-
-    # def mouseReleaseEvent(self, e):
-        # if self.resetRect.contains(self.lastPoint.x(), self.lastPoint.y()) and self.resetRect.contains(e.pos().x(),
-                                                                                                       # e.pos().y()):
-            # if QtGui.QMessageBox.question(self, '', 'Are you sure you want to start a new game?', QtGui.QMessageBox.Yes,
-                                          # QtGui.QMessageBox.No) == QtGui.QMessageBox.Yes:
-                # self.reset_game()
-        # elif self.gameRunning and self.lastPoint is not None:
-            # dx = e.pos().x() - self.lastPoint.x()
-            # dy = e.pos().y() - self.lastPoint.y()
-            # if abs(dx) > abs(dy) and abs(dx) > 10:
-                # if dx > 0:
-                    # self.right()
-                # else:
-                    # self.left()
-            # elif abs(dy) > 10:
-                # if dy > 0:
-                    # self.down()
-                # else:
-                    # self.up()
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -292,29 +253,10 @@ class Game2048(QtGui.QWidget):
         painter.setBrush(self.backgroundBrush)
         painter.drawRect(self.rect())
         painter.setBrush(self.brushes[1])
-        
-        # painter.drawRoundedRect(self.scoreRect, 10.0, 10.0)
-        # painter.drawRoundedRect(self.hiScoreRect, 10.0, 10.0)
-        # painter.drawRoundedRect(self.resetRect, 10.0, 10.0)
-        # painter.setFont(QtGui.QFont('Arial', 9))
-        # painter.setPen(self.darkPen)
-        # painter.drawText(QtCore.QRectF(10, 15, 80, 20), 'SCORE',
-                         # QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-        # painter.drawText(QtCore.QRectF(100, 15, 80, 20), 'HIGHSCORE',
-                         # QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-        # painter.setFont(QtGui.QFont('Arial', 15))
-        # painter.setPen(self.lightPen)
-        # painter.drawText(self.resetRect, 'RESET', QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-        # painter.setFont(QtGui.QFont('Arial', 12))
-        # painter.setPen(self.lightPen)
-        # painter.drawText(self.scoreLabel, str(self.score),
-                         # QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-        # painter.drawText(self.hiScoreLabel, str(self.hiScore),
-                         # QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-                         
+
+        # Init the rank list 
         self.phwidth = self.width+25                 
         self.phmargin = 125
-        
         painter.setFont(QtGui.QFont('Arial',self.phwidth/17))
         phRect = []
         for i in range(0,10):
@@ -325,8 +267,7 @@ class Game2048(QtGui.QWidget):
             
             painter.setPen(QtGui.QColor(255-20*i,10*i,0))
             painter.drawText(phRect[i],str(i+1),QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
-            
-        painter.setFont(self.font)
+        
         
         for gridX in range(0, self.gridSize):
             # for gridX in range(0,4):
@@ -357,25 +298,27 @@ class Game2048(QtGui.QWidget):
                                      QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
                                      
                     # When someone is finished the game, call back the following function
-                    if tile.value == 16 and self.SuccessCallBack != None and self.SuccessCallBackFlag == False:
+                    if tile.value == 1024 and self.SuccessCallBack != None and self.SuccessCallBackFlag == False:
                         self.filename = self.SuccessCallBack()
                         self.SuccessCallBackFlag = True
                         
-                        pixmap = QtGui.QImage(self.filename)
+                        # deal with the winner photo    
+                        try:
+                            f = open('rank.json','rb')
+                            data_json = f.read()
+                            data = json.loads(data_json)
+                            f.close()
+                            for i in range(9,0,-1):
+                                data[str(i)] = data[str(i-1)]
+                            data['0'] = self.filename
+                            f = open('rank.json','wb')
+                            data_json = json.dumps(data)
+                            f.write(data_json)
+                            f.close()
+                            self.initRank(data)
+                        except Exception,e:
+                            print(Exception,e)
 
-                        # width = (self.screen.width() - self.width -10)/2
-                        pictureX = self.width + 100
-                        print(self.width)
-                        width = 200
-                        pixmap = pixmap.scaledToWidth(width)
-                        lbl = QtGui.QLabel(self)
-                        # lbl.resize(2*width, width)
-                        lbl.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-                        lbl.move(pictureX,100)
-                        
-                        lbl.show()
-                        
-        #ph.drawRankText(painter)  
         
         if not self.gameRunning:
             painter.setPen(QtGui.QColor(255,0,0))
@@ -389,67 +332,26 @@ class Game2048(QtGui.QWidget):
         painter.drawText(TitleRect,QtCore.Qt.AlignCenter,u'Ranklist')
         
         
-    def initRank(self):
+    def initRank(self,data):
+    
         pixmap = QtGui.QImage("seeed.jpg")
-
-        # width = (self.screen.width() - self.width -10)/2
+  
+        width = (self.screen.width() - self.width -10)/2
         pictureX = self.width + 100
-        print(self.width)
-        width = 200
-        pixmap = pixmap.scaledToWidth(width)
-        lbl = QtGui.QLabel(self)
-        # lbl.resize(2*width, width)
-        lbl.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lbl.move(pictureX,100)
-        
-        lb2 = QtGui.QLabel(self)
-        # lb2.resize(2 * width, width)
-        lb2.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb2.move(pictureX,225)
+        width = self.width/3.84
+        rankmargin = 125
+        for i in range(0,10):
+            pixmap = QtGui.QImage(data[str(i)])
+            pixmap = pixmap.scaledToWidth(width)
+            lbl = QtGui.QLabel(self)
+            lbl.setPixmap(QtGui.QPixmap.fromImage(pixmap))
+            if i%2 == 0:
+                lbl.move(pictureX,100 + (i/2)*rankmargin)
+            else:
+                lbl.move(pictureX+300,100 + (i/2)*rankmargin)
+                
+            lbl.show()
 
-        lb3 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb3.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb3.move(pictureX,350)        
-        
-        lb4 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb4.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb4.move(pictureX,475)        
-        
-        lb5 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb5.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb5.move(pictureX,600)
-
-        
-        lb6 = QtGui.QLabel(self)
-        # lbl.resize(2*width, width)
-        lb6.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb6.move(pictureX + 300,100)
-        
-        lb7 = QtGui.QLabel(self)
-        # lb2.resize(2 * width, width)
-        lb7.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb7.move(pictureX + 300,225)
-
-        lb8 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb8.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb8.move(pictureX + 300,350)        
-        
-        lb9 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb9.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb9.move(pictureX + 300,475)        
-        
-        lb10 = QtGui.QLabel(self)
-        # lb3.resize(2 * width, width)
-        lb10.setPixmap(QtGui.QPixmap.fromImage(pixmap))
-        lb10.move(pictureX + 300,600)        
-        
-        
-        
 def callback():
     print("I have finished the game")
 if __name__ == '__main__':
@@ -469,8 +371,7 @@ if __name__ == '__main__':
     # configure the photo printer
     ph = photo.TakePhoto()
     g.SetSuccessCallBack(ph.take_photo)
-    
-    
+
     g.show()
     app.exec_()
 
