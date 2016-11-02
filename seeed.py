@@ -4,6 +4,7 @@ import time
 from PySide import QtCore, QtGui
 import random
 from joystick import Communicate,JoyStick
+from Gesture import Gesture
 from TakePhoto import photo
 import json
 
@@ -218,11 +219,12 @@ class Game2048(QtGui.QWidget):
         return False
 
     def keyPressEvent(self, e):
-        if not self.gameRunning:
-            return
         if e.key() == QtCore.Qt.Key_Escape:
             self.reset_game()
-        elif e.key() == QtCore.Qt.Key_Up:
+        if not self.gameRunning:
+            return
+
+        if e.key() == QtCore.Qt.Key_Up:
             self.up()
         elif e.key() == QtCore.Qt.Key_Down:
             self.down()
@@ -235,7 +237,23 @@ class Game2048(QtGui.QWidget):
 
         if value == "click":
             self.reset_game()
-        elif value == "up":
+        if not self.gameRunning:
+            return
+        if value == "up":
+            self.up()
+        elif value == "down":
+            self.down()
+        elif value == "left":
+            self.left()
+        elif value == "right":
+            self.right()
+    def GestureEvent(self, value):
+
+        if value == "click":
+            self.reset_game()
+        if not self.gameRunning:
+            return
+        if value == "up":
             self.up()
         elif value == "down":
             self.down()
@@ -268,6 +286,7 @@ class Game2048(QtGui.QWidget):
             painter.setPen(QtGui.QColor(255-20*i,10*i,0))
             painter.drawText(phRect[i],str(i+1),QtGui.QTextOption(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter))
         
+
         
         for gridX in range(0, self.gridSize):
             # for gridX in range(0,4):
@@ -318,20 +337,25 @@ class Game2048(QtGui.QWidget):
                             self.initRank(data)
                         except Exception,e:
                             print(Exception,e)
-
-        
-        if not self.gameRunning:
+                    if tile.value == 2048:
+                        self.win = True         
+        if not self.movesAvailable() and self.win != True:
             painter.setPen(QtGui.QColor(255,0,0))
             painter.setFont(QtGui.QFont('Arial',self.width/4))
             painter.drawText(event.rect(),QtCore.Qt.AlignLeft,u'GAME\nOVER')
-            # painter.drawText(event.rect(),QtCore.Qt.AlignCenter,u'GAME\nOVER')
-            
         TitleRect = QtCore.QRect(self.screen.width()/4*3-100, 0, self.screen.width()/5, self.screen.width()/15)    
         painter.setPen(QtGui.QColor(255,215,0))
         painter.setFont(QtGui.QFont('Arial',self.width/16))
         painter.drawText(TitleRect,QtCore.Qt.AlignCenter,u'Ranklist')
         
-        
+        if self.win == True:
+            TitleRect = QtCore.QRect(110,180, self.screen.width()/2, self.screen.width()/2)
+            painter.setPen(QtGui.QColor(255,0,0))
+            painter.setFont(QtGui.QFont('Arial',self.width/4))
+                        # painter.drawText(event.rect(),QtCore.Qt.AlignLeft,u'WIN')   
+            painter.drawText(TitleRect,QtCore.Qt.AlignLeft,u'WIN')   
+            self.win = False
+            self.gameRunning = False
     def initRank(self,data):
     
         pixmap = QtGui.QImage("seeed.jpg")
@@ -368,10 +392,19 @@ if __name__ == '__main__':
     joystickapp = JoyStick(signal)
     joystickapp.runloop(.01)
     
+    # configure the gesture
+    # gesture_signal = Gesture.GestureCommunicate()
+    # gesture_signal.direction[str].connect(g.GestureEvent)
+    # gesture_app = Gesture.Gesture(gesture_signal)
+    # gesture_app.runloop(0)
+    
     # configure the photo printer
     ph = photo.TakePhoto()
     g.SetSuccessCallBack(ph.take_photo)
 
     g.show()
-    app.exec_()
+    try:
+        app.exec_()
+    except Exception,e:
+        print(Exception,e)
 
