@@ -1,0 +1,24 @@
+#!/bin/bash
+# /etc/init.d/game
+ 
+### BEGIN INIT INFO
+# Description: This service is used to start the python script
+### END INIT INFO
+ 
+case "$1" in
+    start)
+        echo "Starting Seeed Game"
+	cd /home/pi/RPI_Photo_booth
+        python seeed.py &
+        ;;
+    stop)
+        echo "Stopping Seeed Game"
+        #killall ledblink.py
+        kill $(ps aux | grep -m 1 'python seeed.py' | awk '{ print $2 }')
+        ;;
+    *)
+        echo "Usage: service seeed game start|stop"
+        exit 1
+        ;;
+esac
+exit 0

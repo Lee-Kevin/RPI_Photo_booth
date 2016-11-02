@@ -7,6 +7,7 @@ from joystick import Communicate,JoyStick
 from Gesture import Gesture
 from TakePhoto import photo
 import json
+import wakeup 
 
 # Custom Dictionary according to detail situation
 Custom_Dict = {
@@ -75,7 +76,7 @@ class Game2048(QtGui.QWidget):
         
         self.SuccessCallBack = None
         self.SuccessCallBackFlag = False
-        
+        self.win = False
         # self.phRect[10] = None
         
         
@@ -234,10 +235,12 @@ class Game2048(QtGui.QWidget):
             self.right()   
             
     def DirectionEvent(self, value):
-
+        #      # use this function to wakeup the screen 
         if value == "click":
             self.reset_game()
+            wakeup.wakeup()
         if not self.gameRunning:
+            wakeup.wakeup()
             return
         if value == "up":
             self.up()
@@ -338,15 +341,18 @@ class Game2048(QtGui.QWidget):
                         except Exception,e:
                             print(Exception,e)
                     if tile.value == 2048:
-                        self.win = True         
-        if not self.movesAvailable() and self.win != True:
-            painter.setPen(QtGui.QColor(255,0,0))
-            painter.setFont(QtGui.QFont('Arial',self.width/4))
-            painter.drawText(event.rect(),QtCore.Qt.AlignLeft,u'GAME\nOVER')
+                        self.win = True    
+                        
         TitleRect = QtCore.QRect(self.screen.width()/4*3-100, 0, self.screen.width()/5, self.screen.width()/15)    
         painter.setPen(QtGui.QColor(255,215,0))
         painter.setFont(QtGui.QFont('Arial',self.width/16))
-        painter.drawText(TitleRect,QtCore.Qt.AlignCenter,u'Ranklist')
+        painter.drawText(TitleRect,QtCore.Qt.AlignCenter,u'Ranklist')   
+        
+        if self.gameRunning == False and self.win != True:
+            painter.setPen(QtGui.QColor(255,0,0))
+            painter.setFont(QtGui.QFont('Arial',self.width/4))
+            painter.drawText(event.rect(),QtCore.Qt.AlignLeft,u'GAME\nOVER')
+
         
         if self.win == True:
             TitleRect = QtCore.QRect(110,180, self.screen.width()/2, self.screen.width()/2)
@@ -376,8 +382,7 @@ class Game2048(QtGui.QWidget):
                 
             lbl.show()
 
-def callback():
-    print("I have finished the game")
+
 if __name__ == '__main__':
     app = QtGui.QApplication([])
     g = Game2048(None, 768, 4)
