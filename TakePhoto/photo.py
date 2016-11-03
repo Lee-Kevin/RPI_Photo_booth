@@ -13,16 +13,18 @@ import printer
 import threading
 import logging
 from datetime import datetime
+import os
 
 logging.basicConfig(level='INFO')
 TAKEPHOTO = False
 
 class TakePhoto():
-    def __init__(self):
+    def __init__(self,path):
         self.camera = picamera.PiCamera()
         self.camera.resolution = (1366, 768)
         self.camera.framerate = 24       
         self.myprint = printer.Printer()
+        self.photo_path = path
         
     def take_photo(self):
         self.camera.start_preview()
@@ -35,13 +37,13 @@ class TakePhoto():
         datetime.now()
         self.filename = datetime.now().strftime("20%y-%m-%d-%H-%M-%S")+'.jpg'
         try:
-            self.camera.capture(self.filename)
+            self.camera.capture(self.photo_path + self.filename)
         except Exception,e:
             logging.info(e)
             
         self.print_photo()
         self.camera.stop_preview()
-        return self.filename
+        return self.photo_path+self.filename
             
     def print_photo(self):
         self.camera.annotate_text = "\nPrinting..."
@@ -52,6 +54,8 @@ class TakePhoto():
             logging.info("print the photo")
             time.sleep(8)
 if __name__ == "__main__":
-    app = TakePhoto()
+    path = os.path.dirname(os.path.realpath(__file__))
+    path = path + "/"
+    app = TakePhoto(path)
     filename = app.take_photo()
     print(filename)

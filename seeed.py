@@ -8,6 +8,7 @@ from Gesture import Gesture
 from TakePhoto import photo
 import json
 import wakeup 
+import os
 
 # Custom Dictionary according to detail situation
 Custom_Dict = {
@@ -33,10 +34,10 @@ class Game2048(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.gameRunning = False
         self.panelHeight = 00
-        
+        self.file_path = os.path.dirname(os.path.realpath(__file__))
         self.width = width
         self.screen = QtGui.QDesktopWidget().screenGeometry()
-        f = open('rank.json','rb')
+        f = open(self.file_path+'/rank.json','rb')
         data_json = f.read()
         f.close()
         data = json.loads(data_json)
@@ -326,14 +327,14 @@ class Game2048(QtGui.QWidget):
                         
                         # deal with the winner photo    
                         try:
-                            f = open('rank.json','rb')
+                            f = open(self.file_path+'/rank.json','rb')
                             data_json = f.read()
                             data = json.loads(data_json)
                             f.close()
                             for i in range(9,0,-1):
                                 data[str(i)] = data[str(i-1)]
                             data['0'] = self.filename
-                            f = open('rank.json','wb')
+                            f = open(self.file_path+'/rank.json','wb')
                             data_json = json.dumps(data)
                             f.write(data_json)
                             f.close()
@@ -363,9 +364,7 @@ class Game2048(QtGui.QWidget):
             self.win = False
             self.gameRunning = False
     def initRank(self,data):
-    
-        pixmap = QtGui.QImage("seeed.jpg")
-  
+
         width = (self.screen.width() - self.width -10)/2
         pictureX = self.width + 100
         width = self.width/3.84
@@ -381,15 +380,13 @@ class Game2048(QtGui.QWidget):
                 lbl.move(pictureX+300,100 + (i/2)*rankmargin)
                 
             lbl.show()
-
-
 if __name__ == '__main__':
     app = QtGui.QApplication([])
     g = Game2048(None, 768, 4)
     g.move(0, 0)
 
     g.changeGridSize(4)
-    g.setWindowTitle(u'创客养成记')
+    g.setWindowTitle(u'Maker Road')
     
     # configure the joystick
     signal = Communicate()
@@ -404,7 +401,8 @@ if __name__ == '__main__':
     # gesture_app.runloop(0)
     
     # configure the photo printer
-    ph = photo.TakePhoto()
+    path = g.file_path+"/photo/"
+    ph = photo.TakePhoto(path)
     g.SetSuccessCallBack(ph.take_photo)
 
     g.show()
