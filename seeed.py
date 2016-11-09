@@ -246,6 +246,7 @@ class Game2048(QtGui.QWidget):
         if value == "up":
             self.up()
         elif value == "down":
+	    wakeup.wakeup()
             self.down()
         elif value == "left":
             self.left()
