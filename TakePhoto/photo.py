@@ -50,7 +50,7 @@ class TakePhoto():
         print("print the photo")
         
         # If the mypin 3 is low the printer will not print the photo
-        if True == self.myprint.printFile(self.filename):
+        if True == self.myprint.printFile(self.photo_path+self.filename):
             logging.info("print the photo")
             time.sleep(8)
 if __name__ == "__main__":
